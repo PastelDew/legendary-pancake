@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Build settings
+.conan
+.venv
+.toolchain-fakebin
+CMakeUserPresets.json
+build
+

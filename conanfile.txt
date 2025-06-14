@@ -1,0 +1,9 @@
+[requires]
+glfw/3.3.8
+glad/0.1.36
+imgui/1.89.9
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
