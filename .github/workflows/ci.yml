@@ -18,7 +18,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3 python3-pip cmake
+          sudo apt install -y python3 python3-pip cmake \
+                              libgl-dev libgl1-mesa-dev
           python3 -m venv .venv
           source .venv/bin/activate
           python3 -m pip install conan
