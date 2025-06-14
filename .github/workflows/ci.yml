@@ -37,6 +37,7 @@ jobs:
 
       - name: Build project
         run: |
+          source .venv/bin/activate
           conan install . --output-folder=build --build=missing
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
           cmake --build build
@@ -79,6 +80,7 @@ jobs:
 
       - name: Build project
         run: |
+          source .venv/bin/activate
           conan install . --output-folder=build --build=missing
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
           cmake --build build
@@ -121,6 +123,7 @@ jobs:
 
       - name: Build project
         run: |
+          source .venv/bin/activate
           conan install . --output-folder=build --build=missing
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
           cmake --build build
