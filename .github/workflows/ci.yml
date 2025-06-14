@@ -33,7 +33,7 @@ jobs:
                               libxcb-cursor-dev libxcb-dri2-0-dev libxcb-present-dev \
                               libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev \
                               libx11-dev libx11-xcb-dev libfontenc-dev libice-dev \
-                              libsm-dev libxau-dev libxaw7-dev
+                              libsm-dev libxau-dev libxaw7-dev libxrandr-dev
           python3 -m venv .venv
           source .venv/bin/activate
           python3 -m pip install conan
