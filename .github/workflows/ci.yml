@@ -40,6 +40,8 @@ jobs:
         run: |
           source .venv/bin/activate
           conan profile detect --force
+          conan profile update conf.tools.build:compiler_executables="{'cxx':'/usr/bin/clang++','cc':'/usr/bin/clang'}" default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -80,19 +82,14 @@ jobs:
         run: |
           source .venv/bin/activate
           conan profile detect --force
+          conan profile update conf.tools.build:compiler_executables="{'cxx':'clang++','cc':'clang'}" default
+          conan profile update settings.compiler.libcxx=libc++ default
 
       - name: Cache Conan packages
         uses: actions/cache@v4
         with:
           path: ~/.conan2
           key: ${{ runner.os }}-conan-${{ hashFiles('**/conanfile.*') }}
-
-      - name: Patch profile to use libc++
-        run: |
-          source .venv/bin/activate
-          conan config install .conan
-          conan profile update conf.tools.build:compiler_executables="{'cxx':'/usr/bin/clang++','cc':'/usr/bin/clang'}" default
-          conan profile update settings.compiler.libcxx=libc++ default
 
       - name: Build project (clang-debug)
         run: |
@@ -129,13 +126,8 @@ jobs:
         run: |
           source .venv/Scripts/activate || source .venv/bin/activate
           conan profile detect --force
-
-      - name: Patch profile to use clang
-        shell: bash
-        run: |
-          source .venv/Scripts/activate || source .venv/bin/activate
-          conan config install .conan || true
           conan profile update conf.tools.build:compiler_executables="{'cxx':'clang++','cc':'clang'}" default
+          conan profile update settings.compiler.libcxx=libc++ default
 
       - name: Cache Conan packages
         uses: actions/cache@v4
