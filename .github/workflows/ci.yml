@@ -40,8 +40,10 @@ jobs:
         run: |
           source .venv/bin/activate
           conan profile detect --force
-          conan profile update conf.tools.build:compiler_executables="{'cxx':'/usr/bin/clang++','cc':'/usr/bin/clang'}" default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan config set tools.build:compiler_executables:cc=/usr/bin/clang
+          conan config set tools.build:compiler_executables:cxx=/usr/bin/clang++
+          conan config set tools.system.package_manager:mode=install
+          conan profile show
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -82,8 +84,11 @@ jobs:
         run: |
           source .venv/bin/activate
           conan profile detect --force
-          conan profile update conf.tools.build:compiler_executables="{'cxx':'clang++','cc':'clang'}" default
-          conan profile update settings.compiler.libcxx=libc++ default
+          conan config set tools.build:compiler_executables:cc=clang
+          conan config set tools.build:compiler_executables:cxx=clang++
+          conan config set tools.system.package_manager:mode=install
+          conan config set tools.apple:enable_arc=True
+          conan profile show
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -126,8 +131,10 @@ jobs:
         run: |
           source .venv/Scripts/activate || source .venv/bin/activate
           conan profile detect --force
-          conan profile update conf.tools.build:compiler_executables="{'cxx':'clang++','cc':'clang'}" default
-          conan profile update settings.compiler.libcxx=libc++ default
+          conan config set tools.build:compiler_executables:cc=clang
+          conan config set tools.build:compiler_executables:cxx=clang++
+          conan config set tools.system.package_manager:mode=install
+          conan profile show
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -150,4 +157,3 @@ jobs:
             echo "❌ Build failed!"
             exit 1
           fi
-
