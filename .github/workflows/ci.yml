@@ -20,7 +20,18 @@ jobs:
           sudo apt update
           sudo apt install -y python3 python3-pip clang cmake \
                               libgl1-mesa-dev libx11-dev libxrandr-dev \
-                              libxinerama-dev libxcursor-dev libxi-dev
+                              libxinerama-dev libxcursor-dev libxi-dev \
+                              libx11-xcb-dev libfontenc-dev libice-dev \
+                              libsm-dev libxau-dev libxaw7-dev libxcomposite-dev \
+                              libxdamage-dev libxkbfile-dev libxmu-dev libxmuu-dev \
+                              libxpm-dev libxres-dev libxss-dev libxt-dev libxtst-dev \
+                              libxv-dev libxxf86vm-dev libxcb-glx0-dev libxcb-render0-dev \
+                              libxcb-render-util0-dev libxcb-xkb-dev libxcb-icccm4-dev \
+                              libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev \
+                              libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev \
+                              libxcb-xinerama0-dev libxcb-dri3-dev uuid-dev \
+                              libxcb-cursor-dev libxcb-dri2-0-dev libxcb-present-dev \
+                              libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev
           python3 -m venv .venv
           source .venv/bin/activate
           pip install conan
@@ -76,6 +87,13 @@ jobs:
           path: ~/.conan2
           key: ${{ runner.os }}-conan-${{ hashFiles('**/conanfile.*') }}
 
+      - name: Patch profile to use libc++
+        run: |
+          source .venv/bin/activate
+          conan config install .conan
+          conan profile update conf.tools.build:compiler_executables="{'cxx':'/usr/bin/clang++','cc':'/usr/bin/clang'}" default
+          conan profile update settings.compiler.libcxx=libc++ default
+
       - name: Build project (clang-debug)
         run: |
           chmod +x ./build.sh
@@ -103,14 +121,21 @@ jobs:
         run: |
           choco install llvm cmake python --pre
           python -m venv .venv
-          source .venv/Scripts/activate
+          source .venv/Scripts/activate || source .venv/bin/activate
           pip install conan
 
       - name: Setup Conan default profile
         shell: bash
         run: |
-          source .venv/Scripts/activate
+          source .venv/Scripts/activate || source .venv/bin/activate
           conan profile detect --force
+
+      - name: Patch profile to use clang
+        shell: bash
+        run: |
+          source .venv/Scripts/activate || source .venv/bin/activate
+          conan config install .conan || true
+          conan profile update conf.tools.build:compiler_executables="{'cxx':'clang++','cc':'clang'}" default
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -133,3 +158,4 @@ jobs:
             echo "❌ Build failed!"
             exit 1
           fi
+

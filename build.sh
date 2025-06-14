@@ -61,11 +61,11 @@ if [[ ! -d ".venv" ]]; then
   echo "[INFO] Creating Python virtual environment..."
   python3 -m venv .venv
 fi
-source .venv/bin/activate
 if ! command -v conan &>/dev/null; then
   echo "[INFO] Installing Conan in venv..."
   pip install conan
 fi
+source .venv/bin/activate
 
 # ----------------------
 # Detect clang path
