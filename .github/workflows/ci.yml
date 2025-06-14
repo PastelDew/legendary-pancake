@@ -18,7 +18,9 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3 python3-pip clang cmake
+          sudo apt install -y python3 python3-pip clang cmake \
+                              libgl1-mesa-dev libx11-dev libxrandr-dev \
+                              libxinerama-dev libxcursor-dev libxi-dev
           python3 -m venv .venv
           source .venv/bin/activate
           pip install conan
@@ -38,6 +40,15 @@ jobs:
         run: |
           chmod +x ./build.sh
           ./build.sh clang-debug
+
+      - name: Verify build output
+        run: |
+          if [ -f ./build/bin/your_game_binary ]; then
+            echo "✅ Build succeeded!"
+          else
+            echo "❌ Build failed!"
+            exit 1
+          fi
 
   build-macos:
     name: macOS Build (Clang Debug)
@@ -69,6 +80,15 @@ jobs:
         run: |
           chmod +x ./build.sh
           ./build.sh clang-debug
+
+      - name: Verify build output
+        run: |
+          if [ -f ./build/bin/your_game_binary ]; then
+            echo "✅ Build succeeded!"
+          else
+            echo "❌ Build failed!"
+            exit 1
+          fi
 
   build-windows:
     name: Windows Build (Clang Debug)
@@ -104,3 +124,12 @@ jobs:
           chmod +x ./build.sh
           ./build.sh clang-debug
 
+      - name: Verify build output
+        shell: bash
+        run: |
+          if [ -f ./build/bin/your_game_binary ]; then
+            echo "✅ Build succeeded!"
+          else
+            echo "❌ Build failed!"
+            exit 1
+          fi
