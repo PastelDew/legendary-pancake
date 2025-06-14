@@ -56,7 +56,7 @@ case "$CONF" in
     PROFILE_PATH="./.conan/profiles/gcc-release"
     ;;
   *)
-    echo "❌ Unknown or missing --conf option"
+    echo "❌ Unknown or missing --conf option(Given: $CONF)"
     echo "   Use one of: --conf=clang-debug, --conf=clang-release, --conf=gcc-debug, --conf=gcc-release"
     exit 1
     ;;

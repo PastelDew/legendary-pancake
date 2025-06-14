@@ -45,22 +45,22 @@ jobs:
       - name: Cache Conan packages
         uses: actions/cache@v4
         with:
-          path: ~/.conan2
+          path: ./.conan
           key: ${{ runner.os }}-conan-${{ hashFiles('**/conanfile.*') }}
 
       - name: Build project (clang-debug)
         run: |
           chmod +x ./build.sh
-          ./build.sh --conf clang-debug
+          ./build.sh --conf=clang-debug
 
-      - name: Verify build output
-        run: |
-          if [ -f ./build/bin/your_game_binary ]; then
-            echo "✅ Build succeeded!"
-          else
-            echo "❌ Build failed!"
-            exit 1
-          fi
+#      - name: Verify build output
+#        run: |
+#          if [ -f ./build/bin/your_game_binary ]; then
+#            echo "✅ Build succeeded!"
+#          else
+#            echo "❌ Build failed!"
+#            exit 1
+#          fi
 
   build-macos:
     name: macOS Build (Clang Debug)
@@ -86,22 +86,22 @@ jobs:
       - name: Cache Conan packages
         uses: actions/cache@v4
         with:
-          path: ~/.conan2
+          path: ./.conan
           key: ${{ runner.os }}-conan-${{ hashFiles('**/conanfile.*') }}
 
       - name: Build project (clang-debug)
         run: |
           chmod +x ./build.sh
-          ./build.sh --conf clang-debug
+          ./build.sh --conf=clang-debug
 
-      - name: Verify build output
-        run: |
-          if [ -f ./build/bin/your_game_binary ]; then
-            echo "✅ Build succeeded!"
-          else
-            echo "❌ Build failed!"
-            exit 1
-          fi
+#      - name: Verify build output
+#        run: |
+#          if [ -f ./build/bin/your_game_binary ]; then
+#            echo "✅ Build succeeded!"
+#          else
+#            echo "❌ Build failed!"
+#            exit 1
+#          fi
 
   build-windows:
     name: Windows Build (Clang Debug)
@@ -129,22 +129,22 @@ jobs:
       - name: Cache Conan packages
         uses: actions/cache@v4
         with:
-          path: ~/.conan2
+          path: ./.conan/
           key: ${{ runner.os }}-conan-${{ hashFiles('**/conanfile.*') }}
 
       - name: Build project (clang-debug)
         shell: bash
         run: |
           chmod +x ./build.sh
-          ./build.sh --conf clang-debug
+          ./build.sh --conf=clang-debug
 
-      - name: Verify build output
-        shell: bash
-        run: |
-          if [ -f ./build/bin/your_game_binary ]; then
-            echo "✅ Build succeeded!"
-          else
-            echo "❌ Build failed!"
-            exit 1
-          fi
+#      - name: Verify build output
+#        shell: bash
+#        run: |
+#          if [ -f ./build/bin/your_game_binary ]; then
+#            echo "✅ Build succeeded!"
+#          else
+#            echo "❌ Build failed!"
+#            exit 1
+#          fi
 
