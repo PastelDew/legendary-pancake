@@ -23,6 +23,11 @@ jobs:
           source .venv/bin/activate
           pip install conan
 
+      - name: Setup Conan default profile
+        run: |
+          source .venv/bin/activate
+          conan profile detect --force
+
       - name: Cache Conan packages
         uses: actions/cache@v4
         with:
@@ -48,6 +53,11 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip install conan
+
+      - name: Setup Conan default profile
+        run: |
+          source .venv/bin/activate
+          conan profile detect --force
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -75,6 +85,12 @@ jobs:
           python -m venv .venv
           source .venv/Scripts/activate
           pip install conan
+
+      - name: Setup Conan default profile
+        shell: bash
+        run: |
+          source .venv/Scripts/activate
+          conan profile detect --force
 
       - name: Cache Conan packages
         uses: actions/cache@v4
