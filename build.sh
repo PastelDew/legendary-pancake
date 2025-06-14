@@ -13,6 +13,28 @@ pip install conan
 FAKEBIN_DIR=".toolchain-fakebin"
 PROFILE_DIR=".conan/profiles"
 PROFILE_PATH="$PROFILE_DIR/default_profile.ini"
+OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/Macos/' | sed 's/linux/Linux/' | sed 's/windows/Windows/')
+if [ -z "$OS_NAME" ]; then
+  echo "❌ Unable to determine OS name. Aborting."
+  exit 1
+fi
+
+case "$OS_NAME" in
+  Macos)
+    CPP_LIB="libc++"
+    ;;
+  Linux)
+    CPP_LIB="libstdc++"
+    ;;
+  Windows)
+    CPP_LIB="msvc"
+    ;;
+  *)
+    echo "❌ Unsupported OS: $OS_NAME. Supported: Macos, Linux, Windows."
+    exit 1
+    ;;
+esac
+echo "🛠️  Detected OS: $OS_NAME"
 
 export CONAN_HOME="$(pwd)/.conan"
 export PATH="$(pwd)/.venv/bin:$PATH"
@@ -78,12 +100,12 @@ if [ ! -f "$PROFILE_PATH" ]; then
   echo "📝 Creating default profile at $PROFILE_PATH..."
   cat > "$PROFILE_PATH" <<EOF
 [settings]
-os=$(uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/Macos/' | sed 's/linux/Linux/' | sed 's/windows/Windows/')
+os=${OS_NAME}
 arch=x86_64
 compiler=${COMPILER_NAME}
 build_type=${BUILD_TYPE}
-compiler.version=14
-compiler.libcxx=libstdc++11
+compiler.version=${COMPILER_VERSION}
+compiler.libcxx=${CPP_LIB}
 compiler.cppstd=20
 
 [conf]
