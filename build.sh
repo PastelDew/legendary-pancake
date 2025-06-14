@@ -1,139 +1,107 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
-# ----------------------
-# Configurable Defaults
-# ----------------------
-BUILD_TYPE="Debug"
-PROFILE_NAME="clang-debug"
-FAKEBIN_DIR=".toolchain-fakebin"
-CONAN_PROFILE_DIR=".conan/profiles"
-OS_NAME="$(uname -s)"
-
-# ----------------------
-# Parse arguments
-# ----------------------
-if [[ $# -ge 1 ]]; then
-  PROFILE_NAME="$1"
-fi
-if [[ "$PROFILE_NAME" == *"release"* ]]; then
-  BUILD_TYPE="Release"
-fi
-
-# ----------------------
-# Determine OS and package manager
-# ----------------------
-install_pkg() {
-  if [[ "$OS_NAME" == "Linux" ]]; then
-    if command -v apt &>/dev/null; then
-      sudo apt update && sudo apt install -y "$@"
-    elif command -v pacman &>/dev/null; then
-      sudo pacman -Sy --noconfirm "$@"
-    fi
-  elif [[ "$OS_NAME" == "Darwin" ]]; then
-    if ! command -v brew &>/dev/null; then
-      echo "[ERROR] Homebrew not found. Please install it manually from https://brew.sh" >&2
-      exit 1
-    fi
-    brew install "$@"
-  elif [[ "$OS_NAME" == MINGW* || "$OS_NAME" == MSYS* || "$OS_NAME" == CYGWIN* ]]; then
-    echo "[ERROR] Please install dependencies manually on Windows." >&2
-    exit 1
-  fi
-}
-
-# ----------------------
-# Check and install python3 & pip if missing
-# ----------------------
-if ! command -v python3 &>/dev/null; then
-  echo "[INFO] python3 not found. Installing..."
-  install_pkg python3
-fi
-if ! command -v pip3 &>/dev/null; then
-  echo "[INFO] pip3 not found. Installing..."
-  install_pkg python3-pip
-fi
-
-# ----------------------
-# Check and install conan if missing (in venv)
-# ----------------------
-if [[ ! -d ".venv" ]]; then
-  echo "[INFO] Creating Python virtual environment..."
-  python3 -m venv .venv
-fi
-if ! command -v conan &>/dev/null; then
-  echo "[INFO] Installing Conan in venv..."
-  pip install conan
-fi
+echo "🛠️  Checking environment..."
+command -v python3 >/dev/null 2>&1 || { echo >&2 "❌ python3 is not installed. Aborting."; exit 1; }
+python3 -m ensurepip --default-pip || true
+python3 -m pip --version >/dev/null 2>&1 || { echo >&2 "❌ pip is not available. Aborting."; exit 1; }
+python3 -m venv .venv || { echo >&2 "❌ Failed to create virtual environment. Aborting."; exit 1; }
 source .venv/bin/activate
+pip install --upgrade pip
+pip install conan
 
-# ----------------------
-# Detect clang path
-# ----------------------
-CLANGXX_PATH="$(command -v clang++)"
-CLANG_PATH="$(command -v clang)"
-if [[ -z "$CLANGXX_PATH" || -z "$CLANG_PATH" ]]; then
-  echo "[ERROR] clang or clang++ not found in PATH." >&2
+FAKEBIN_DIR=".toolchain-fakebin"
+PROFILE_DIR=".conan/profiles"
+PROFILE_PATH="$PROFILE_DIR/default_profile.ini"
+
+export CONAN_HOME="$(pwd)/.conan"
+export PATH="$(pwd)/.venv/bin:$PATH"
+
+CONF=$1
+if [ -z "$CONF" ]; then
+  CONF=--conf=clang-debug
+fi
+
+case "$CONF" in
+  --conf=clang-debug)
+    COMPILER_NAME="clang"
+    COMPILER_PATH="$(command -v clang)"
+    COMPILER_CPP_PATH="$(command -v clang++)"
+    COMPILER_VERSION=20
+    BUILD_TYPE="Debug"
+    PROFILE_PATH="./.conan/profiles/clang-debug"
+    ;;
+  --conf=clang-release)
+    COMPILER_NAME="clang"
+    COMPILER_PATH="$(command -v clang)"
+    COMPILER_CPP_PATH="$(command -v clang++)"
+    COMPILER_VERSION=20
+    BUILD_TYPE="Release"
+    PROFILE_PATH="./.conan/profiles/clang-release"
+    ;;
+  --conf=gcc-debug)
+    COMPILER_NAME="gcc"
+    COMPILER_PATH="$(command -v gcc)"
+    COMPILER_CPP_PATH="$(command -v g++)"
+    COMPILER_VERSION=15
+    BUILD_TYPE="Debug"
+    PROFILE_PATH="./.conan/profiles/gcc-debug"
+    ;;
+  --conf=gcc-release)
+    COMPILER_NAME="gcc"
+    COMPILER_PATH="$(command -v gcc)"
+    COMPILER_CPP_PATH="$(command -v g++)"
+    COMPILER_VERSION=15
+    BUILD_TYPE="Release"
+    PROFILE_PATH="./.conan/profiles/gcc-release"
+    ;;
+  *)
+    echo "❌ Unknown or missing --conf option"
+    echo "   Use one of: --conf=clang-debug, --conf=clang-release, --conf=gcc-debug, --conf=gcc-release"
+    exit 1
+    ;;
+esac
+if [[ -z "$COMPILER_PATH" || -z "$COMPILER_CPP_PATH}" ]]; then
+  echo "❌ Compiler($COMPILER_PATH or $COMPILER_CPP_PATH) not found in PATH." >&2
   exit 1
 fi
 
-# ----------------------
-# Detect current OS for Conan profile
-# ----------------------
-case "$OS_NAME" in
-  Linux*) CONAN_OS="Linux";;
-  Darwin*) CONAN_OS="Macos";;
-  MINGW*|MSYS*|CYGWIN*) CONAN_OS="Windows";;
-  *) echo "[ERROR] Unknown OS: $OS_NAME" >&2; exit 1;;
-esac
+mkdir -p "$FAKEBIN_DIR"
+ln -sf "$COMPILER_PATH" "$FAKEBIN_DIR/cc"
+ln -sf "$COMPILER_CPP_PATH" "$FAKEBIN_DIR/c++"
+export PATH="$(pwd)/$FAKEBIN_DIR:$PATH"
+echo "📝 PATH override applied: $PATH"
 
-# ----------------------
-# Create default profile if missing
-# ----------------------
-mkdir -p "$CONAN_PROFILE_DIR"
-PROFILE_PATH="$CONAN_PROFILE_DIR/$PROFILE_NAME"
-if [[ ! -f "$PROFILE_PATH" ]]; then
-  echo "[INFO] Creating default profile: $PROFILE_NAME"
-  CLANG_VERSION=$(clang --version | grep -oE 'clang version ([0-9]+)' | awk '{print $3}' | head -1)
+
+mkdir -p "$PROFILE_DIR"
+if [ ! -f "$PROFILE_PATH" ]; then
+  echo "📝 Creating default profile at $PROFILE_PATH..."
   cat > "$PROFILE_PATH" <<EOF
 [settings]
-os=$CONAN_OS
+os=$(uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/Macos/' | sed 's/linux/Linux/' | sed 's/windows/Windows/')
 arch=x86_64
-compiler=clang
-compiler.version=$CLANG_VERSION
+compiler=${COMPILER_NAME}
 build_type=${BUILD_TYPE}
+compiler.version=14
 compiler.libcxx=libstdc++11
 compiler.cppstd=20
 
 [conf]
 tools.system.package_manager:mode=install
-tools.build:compiler_executables={"cxx":"$CLANGXX_PATH","cc":"$CLANG_PATH"}
+tools.build:compiler_executables={"cxx": "${COMPILER_CPP_PATH}", "cc": "${COMPILER_PATH}"}
 EOF
 fi
 
-# ----------------------
-# Setup fakebin (force Conan to use clang++)
-# ----------------------
-mkdir -p "$FAKEBIN_DIR"
-ln -sf "$CLANGXX_PATH" "$FAKEBIN_DIR/c++"
-ln -sf "$CLANG_PATH" "$FAKEBIN_DIR/cc"
-export PATH="$(pwd)/$FAKEBIN_DIR:$PATH"
-echo "[INFO] PATH override applied: $PATH"
-
-# ----------------------
-# Conan install
-# ----------------------
-BUILD_DIR="build/$PROFILE_NAME"
-echo "[INFO] Conan 의존성 설치..."
+echo "📦 Installing Conan dependencies with:"
+echo "   🔧 Compiler   = $COMPILER_PATH"
+echo "   🏗  BuildType = $BUILD_TYPE"
+echo "   📁 Profile    = $PROFILE_PATH"
 conan install . \
-  --output-folder="$BUILD_DIR" \
-  --profile="$PROFILE_PATH" \
+  --output-folder=build \
+  --profile:host="$PROFILE_PATH" \
+  --profile:build="$PROFILE_PATH" \
   --build=missing
 
-# ----------------------
-# CMake configure & build
-# ----------------------
-echo "[INFO] CMake 설정 및 빌드..."
-cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
-cmake --build "$BUILD_DIR"
-
+echo "🔨 Generating build system..."
+cmake -S . -B build -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
+cmake --build build

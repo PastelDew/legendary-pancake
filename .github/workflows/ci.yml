@@ -40,9 +40,6 @@ jobs:
         run: |
           source .venv/bin/activate
           conan profile detect --force
-          conan config set tools.build:compiler_executables:cc=/usr/bin/clang
-          conan config set tools.build:compiler_executables:cxx=/usr/bin/clang++
-          conan config set tools.system.package_manager:mode=install
           conan profile show
 
       - name: Cache Conan packages
@@ -54,7 +51,7 @@ jobs:
       - name: Build project (clang-debug)
         run: |
           chmod +x ./build.sh
-          ./build.sh clang-debug
+          ./build.sh --conf clang-debug
 
       - name: Verify build output
         run: |
@@ -75,7 +72,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install python3 cmake llvm
+          brew install --formula python3 cmake llvm
           python3 -m venv .venv
           source .venv/bin/activate
           pip install conan
@@ -84,10 +81,6 @@ jobs:
         run: |
           source .venv/bin/activate
           conan profile detect --force
-          conan config set tools.build:compiler_executables:cc=clang
-          conan config set tools.build:compiler_executables:cxx=clang++
-          conan config set tools.system.package_manager:mode=install
-          conan config set tools.apple:enable_arc=True
           conan profile show
 
       - name: Cache Conan packages
@@ -99,7 +92,7 @@ jobs:
       - name: Build project (clang-debug)
         run: |
           chmod +x ./build.sh
-          ./build.sh clang-debug
+          ./build.sh --conf clang-debug
 
       - name: Verify build output
         run: |
@@ -131,9 +124,6 @@ jobs:
         run: |
           source .venv/Scripts/activate || source .venv/bin/activate
           conan profile detect --force
-          conan config set tools.build:compiler_executables:cc=clang
-          conan config set tools.build:compiler_executables:cxx=clang++
-          conan config set tools.system.package_manager:mode=install
           conan profile show
 
       - name: Cache Conan packages
@@ -146,7 +136,7 @@ jobs:
         shell: bash
         run: |
           chmod +x ./build.sh
-          ./build.sh clang-debug
+          ./build.sh --conf clang-debug
 
       - name: Verify build output
         shell: bash
@@ -157,3 +147,4 @@ jobs:
             echo "❌ Build failed!"
             exit 1
           fi
+
