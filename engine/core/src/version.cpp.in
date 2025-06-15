@@ -1,0 +1,57 @@
+#include "version.hpp"
+#include <cstdint>
+
+namespace {
+    constexpr uint32_t kVersionMajor = @PROJECT_LPE_VERSION_MAJOR@;
+    constexpr uint32_t kVersionMinor = @PROJECT_LPE_VERSION_MINOR@;
+    constexpr uint32_t kVersionPatch = @PROJECT_LPE_VERSION_PATCH@;
+    constexpr auto kVersionPrerelease = "@PROJECT_LPE_VERSION_PRERELEASE@";
+
+    constexpr auto kVersionProjectVersion = "@PROJECT_LPE_VERSION@";
+    constexpr auto kVersionProjectFullVersion = "@PROJECT_LPE_FULL_VERSION@";
+    constexpr auto kVersionGitCommitHash = "@PROJECT_LPE_GIT_COMMIT_HASH@";
+}
+
+namespace lp_engine
+{
+namespace version
+{
+    bool isVersionAtLeast(uint32_t major, uint32_t minor, uint32_t patch){
+        return (kVersionMajor > major) ||
+               (kVersionMajor == major && kVersionMinor > minor) ||
+               (kVersionMajor == major && kVersionMinor == minor && kVersionPatch >= patch);
+    }
+    bool isVersionLessThan(uint32_t major, uint32_t minor, uint32_t patch){
+        return (kVersionMajor < major) ||
+               (kVersionMajor == major && kVersionMinor < minor) ||
+               (kVersionMajor == major && kVersionMinor == minor && kVersionPatch < patch);
+    }
+    bool isVersionEqualTo(uint32_t major, uint32_t minor, uint32_t patch){
+        return (kVersionMajor == major && kVersionMinor == minor && kVersionPatch == patch);
+    }
+    bool isVersionEqualTo(const std::string& version){
+        uint32_t major, minor, patch;
+        char dummy;
+        if (sscanf(version.c_str(), "%u.%u.%u%c", &major, &minor, &patch, &dummy) >= 3) {
+            return isVersionEqualTo(major, minor, patch);
+        }
+        return false;
+    }
+
+    uint32_t getMajor() { return kVersionMajor; }
+    uint32_t getMinor() { return kVersionMinor; }
+    uint32_t getPatch() { return kVersionPatch; }
+    std::string getPrerelease() { return kVersionPrerelease; }
+    std::string getProjectVersion() { return kVersionProjectVersion; }
+    std::string getProjectFullVersion() { return kVersionProjectFullVersion; }
+    std::string getGitCommitHash() { return kVersionGitCommitHash; }
+    
+    std::tuple<uint32_t, uint32_t, uint32_t> getSemanticVersion() {
+        return std::make_tuple(kVersionMajor, kVersionMinor, kVersionPatch);
+    }
+    
+    bool isPrerelease() { 
+        return std::string(kVersionPrerelease).length() > 0;
+    }
+}
+}

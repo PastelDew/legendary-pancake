@@ -1,21 +1,61 @@
-cmake_minimum_required(VERSION 3.16)
-project(engine)
+project(lp_engine)
+message(STATUS "===============================================")
+message(STATUS "🚀 Configuring ${PROJECT_NAME} module...")
+message(STATUS "===============================================")
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(default_build_type "Debug")
-  message(STATUS "Set the build type to `${default_build_type}` as none was specified.")
-  set(CMAKE_BUILD_TYPE ${default_build_type} CACHE STRING "Chooce the build type." FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-  "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  message(FATAL_ERROR "This CMakeLists.txt cannot be built directly. Please use the top-level CMakeLists.txt.")
 endif()
-message(STATUS "Project[${}] Build Type: ${CMAKE_BUILD_TYPE}")
 
-# Set the version for myProject
-set(myProject_Version_Major 0)
-set(myProject_Version_Minor 1)
-set(myProject_Version_Patch 0)
-set(myProject_Version_Status "-dev")
-set(PROJECT_VERSION
-  "${myProject_Version_Major}.${myProject_Version_Minor}.${myProject_Version_Patch}${myProject_Version_Status}"
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/core/src/version.cpp.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/core/src/version.cpp"
+  @ONLY
 )
-message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
+
+file(GLOB_RECURSE ENGINE_SOURCES
+  "core/src/*.cpp"
+  "core/src/*.hpp"
+)
+
+add_library(${PROJECT_NAME} STATIC ${ENGINE_SOURCES})
+add_library(lp::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/core/include>
+    $<INSTALL_INTERFACE:core/include>
+)
+
+# Install the library
+install(TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+# Install the headers
+install(DIRECTORY include/
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.hpp"
+)
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/core/tests/test_version.cpp.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/core/tests/test_version.cpp"
+  @ONLY
+)
+file(GLOB_RECURSE TEST_SOURCES
+  "core/tests/*.cpp"
+  "core/tests/*.hpp"
+)
+add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
+target_link_libraries(${PROJECT_NAME}_test
+  PRIVATE
+    ${PROJECT_NAME}
+    gtest::gtest
+)
+
+message(STATUS "===============================================")
+message(STATUS "✅ Configuring ${PROJECT_NAME} module... Done.")
+message(STATUS "===============================================")

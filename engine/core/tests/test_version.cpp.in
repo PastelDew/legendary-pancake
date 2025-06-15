@@ -1,0 +1,73 @@
+#include <cstdint>
+#include <gtest/gtest.h>
+#include <version.hpp>
+
+namespace {
+    constexpr uint32_t kVersionMajor = @PROJECT_LPE_VERSION_MAJOR@;
+    constexpr uint32_t kVersionMinor = @PROJECT_LPE_VERSION_MINOR@;
+    constexpr uint32_t kVersionPatch = @PROJECT_LPE_VERSION_PATCH@;
+    constexpr auto kVersionPrerelease = "@PROJECT_LPE_VERSION_PRERELEASE@";
+
+    constexpr auto kVersionProjectVersion = "@PROJECT_LPE_VERSION@";
+    constexpr auto kVersionProjectFullVersion = "@PROJECT_LPE_FULL_VERSION@";
+    constexpr auto kVersionGitCommitHash = "@PROJECT_LPE_GIT_COMMIT_HASH@";
+}
+
+namespace lp_engine {
+namespace version {
+TEST(VersionTest, IsVersionAtLeast) {
+    if(kVersionMajor > 0)
+    {
+        EXPECT_TRUE(isVersionAtLeast(kVersionMajor - 1, kVersionMinor, kVersionPatch));
+    }
+    if(kVersionMinor > 0)
+    {
+        EXPECT_TRUE(isVersionAtLeast(kVersionMajor, kVersionMinor - 1, kVersionPatch));
+    }
+    if(kVersionPatch > 0)
+    {
+        EXPECT_TRUE(isVersionAtLeast(kVersionMajor, kVersionMinor, kVersionPatch - 1));
+    }
+    EXPECT_TRUE(isVersionAtLeast(0, 0, 0));
+    EXPECT_FALSE(isVersionAtLeast(kVersionMajor + 1, kVersionMinor, kVersionPatch)); 
+    EXPECT_FALSE(isVersionAtLeast(kVersionMajor, kVersionMinor + 1, kVersionPatch));
+    EXPECT_FALSE(isVersionAtLeast(kVersionMajor, kVersionMinor, kVersionPatch + 1));
+    EXPECT_FALSE(isVersionAtLeast(kVersionMajor + 1, kVersionMinor + 1, kVersionPatch + 1));
+}
+
+TEST(VersionTest, IsVersionLessThan) {
+    EXPECT_TRUE(isVersionLessThan(kVersionMajor + 1, kVersionMinor, kVersionPatch));
+    EXPECT_TRUE(isVersionLessThan(kVersionMajor, kVersionMinor + 1, kVersionPatch));
+    EXPECT_TRUE(isVersionLessThan(kVersionMajor, kVersionMinor, kVersionPatch + 1));
+    EXPECT_FALSE(isVersionLessThan(kVersionMajor, kVersionMinor, kVersionPatch));
+}
+
+TEST(VersionTest, IsVersionEqualTo) {
+    EXPECT_TRUE(isVersionEqualTo(kVersionMajor, kVersionMinor, kVersionPatch));
+    EXPECT_TRUE(isVersionEqualTo(kVersionProjectVersion));
+    EXPECT_TRUE(isVersionEqualTo(kVersionProjectFullVersion));
+    EXPECT_FALSE(isVersionEqualTo("0.0.0-invalid"));
+    EXPECT_FALSE(isVersionEqualTo(kVersionMajor + 1, kVersionMinor, kVersionPatch));
+    EXPECT_FALSE(isVersionEqualTo(kVersionMajor, kVersionMinor + 1, kVersionPatch));
+    EXPECT_FALSE(isVersionEqualTo(kVersionMajor, kVersionMinor, kVersionPatch + 1));
+}
+
+TEST(VersionTest, GetVersionComponents) {
+    EXPECT_EQ(getMajor(), kVersionMajor);
+    EXPECT_EQ(getMinor(), kVersionMinor);
+    EXPECT_EQ(getPatch(), kVersionPatch);
+    EXPECT_EQ(getPrerelease(), kVersionPrerelease);
+
+    auto semanticVersion = getSemanticVersion();
+    EXPECT_EQ(std::get<0>(semanticVersion), kVersionMajor);
+    EXPECT_EQ(std::get<1>(semanticVersion), kVersionMinor);
+    EXPECT_EQ(std::get<2>(semanticVersion), kVersionPatch);
+}
+
+TEST(VersionTest, GetVersionString) {
+    EXPECT_EQ(getProjectFullVersion(), kVersionProjectFullVersion);
+    EXPECT_EQ(getProjectVersion(), kVersionProjectVersion);
+    EXPECT_EQ(getGitCommitHash(), kVersionGitCommitHash);
+}
+} // namespace version
+} // namespace lp_engine

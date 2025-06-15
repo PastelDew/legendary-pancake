@@ -101,7 +101,7 @@ if [ ! -f "$PROFILE_PATH" ]; then
   cat > "$PROFILE_PATH" <<EOF
 [settings]
 os=${OS_NAME}
-arch=x86_64
+arch=$(uname -m | sed 's/x86_64/x86_64/' | sed 's/aarch64/armv8/' | sed 's/armv7l/armv7/' | sed 's/arm64/armv8/')
 compiler=${COMPILER_NAME}
 build_type=${BUILD_TYPE}
 compiler.version=${COMPILER_VERSION}
@@ -119,11 +119,14 @@ echo "   🔧 Compiler   = $COMPILER_PATH"
 echo "   🏗  BuildType = $BUILD_TYPE"
 echo "   📁 Profile    = $PROFILE_PATH"
 conan install . \
-  --output-folder=build \
+  --output-folder=build/conan \
   --profile:host="$PROFILE_PATH" \
   --profile:build="$PROFILE_PATH" \
   --build=missing
 
 echo "🔨 Generating build system..."
-cmake -S . -B build -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
+BUILD_DIR="build"
+TOOLCHAIN_FILE="build/conan/conan_toolchain.cmake"
+
+cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"
 cmake --build build

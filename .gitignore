@@ -35,6 +35,10 @@
 .conan
 .venv
 .toolchain-fakebin
+.cache
+.vscode
 CMakeUserPresets.json
 build
-
+**/version.cpp
+**/test_version.cpp
+compile_commands.json

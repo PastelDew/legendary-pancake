@@ -58,14 +58,15 @@ jobs:
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
           cmake --build build
 
-#      - name: Verify build output
-#        run: |
-#          if [ -f ./build/bin/your_game_binary ]; then
-#            echo "✅ Build succeeded!"
-#          else
-#            echo "❌ Build failed!"
-#            exit 1
-#          fi
+      - name: Run all test binaries
+        run: |
+          set -e
+          for test_bin in ./build/bin/*_test; do
+            if [ -x "$test_bin" ]; then
+              echo "Running $test_bin"
+              "$test_bin"
+            fi
+          done
 
   build-macos:
     name: macOS Build
@@ -101,14 +102,15 @@ jobs:
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
           cmake --build build
 
-#      - name: Verify build output
-#        run: |
-#          if [ -f ./build/bin/your_game_binary ]; then
-#            echo "✅ Build succeeded!"
-#          else
-#            echo "❌ Build failed!"
-#            exit 1
-#          fi
+      - name: Run all test binaries
+        run: |
+          set -e
+          for test_bin in ./build/bin/*_test; do
+            if [ -x "$test_bin" ]; then
+              echo "Running $test_bin"
+              "$test_bin"
+            fi
+          done
 
   build-windows:
     name: Windows Build
@@ -147,13 +149,13 @@ jobs:
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
           cmake --build build
 
-#      - name: Verify build output
-#        shell: bash
-#        run: |
-#          if [ -f ./build/bin/your_game_binary ]; then
-#            echo "✅ Build succeeded!"
-#          else
-#            echo "❌ Build failed!"
-#            exit 1
-#          fi
-
+      - name: Run all test binaries
+        shell: bash
+        run: |
+          set -e
+          for test_bin in ./build/bin/*_test; do
+            if [ -x "$test_bin" ]; then
+              echo "Running $test_bin"
+              "$test_bin"
+            fi
+          done

@@ -2,8 +2,8 @@
 glfw/3.3.8
 glad/0.1.36
 imgui/1.89.9
+gtest/1.16.0
 
 [generators]
 CMakeDeps
 CMakeToolchain
-
