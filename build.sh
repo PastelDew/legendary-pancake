@@ -10,8 +10,8 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install conan
 
-FAKEBIN_DIR=".toolchain-fakebin"
-PROFILE_DIR=".conan/profiles"
+FAKEBIN_DIR="../.toolchain-fakebin"
+PROFILE_DIR="../.conan/profiles"
 PROFILE_PATH="$PROFILE_DIR/default_profile.ini"
 OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/Macos/' | sed 's/linux/Linux/' | sed 's/windows/Windows/')
 if [ -z "$OS_NAME" ]; then
@@ -36,8 +36,8 @@ case "$OS_NAME" in
 esac
 echo "🛠️  Detected OS: $OS_NAME"
 
-export CONAN_HOME="$(pwd)/.conan"
-export PATH="$(pwd)/.venv/bin:$PATH"
+export CONAN_HOME="$(pwd)/../.conan"
+export PATH="$(pwd)/../.venv/bin:$PATH"
 
 CONF=$1
 if [ -z "$CONF" ]; then
@@ -51,7 +51,7 @@ case "$CONF" in
     COMPILER_CPP_PATH="$(command -v clang++)"
     COMPILER_VERSION=20
     BUILD_TYPE="Debug"
-    PROFILE_PATH="./.conan/profiles/clang-debug"
+    PROFILE_PATH="../.conan/profiles/clang-debug"
     ;;
   --conf=clang-release)
     COMPILER_NAME="clang"
@@ -59,7 +59,7 @@ case "$CONF" in
     COMPILER_CPP_PATH="$(command -v clang++)"
     COMPILER_VERSION=20
     BUILD_TYPE="Release"
-    PROFILE_PATH="./.conan/profiles/clang-release"
+    PROFILE_PATH="../.conan/profiles/clang-release"
     ;;
   --conf=gcc-debug)
     COMPILER_NAME="gcc"
@@ -67,7 +67,7 @@ case "$CONF" in
     COMPILER_CPP_PATH="$(command -v g++)"
     COMPILER_VERSION=15
     BUILD_TYPE="Debug"
-    PROFILE_PATH="./.conan/profiles/gcc-debug"
+    PROFILE_PATH="../.conan/profiles/gcc-debug"
     ;;
   --conf=gcc-release)
     COMPILER_NAME="gcc"
@@ -75,7 +75,7 @@ case "$CONF" in
     COMPILER_CPP_PATH="$(command -v g++)"
     COMPILER_VERSION=15
     BUILD_TYPE="Release"
-    PROFILE_PATH="./.conan/profiles/gcc-release"
+    PROFILE_PATH="../.conan/profiles/gcc-release"
     ;;
   *)
     echo "❌ Unknown or missing --conf option(Given: $CONF)"
@@ -118,8 +118,12 @@ echo "📦 Installing Conan dependencies with:"
 echo "   🔧 Compiler   = $COMPILER_PATH"
 echo "   🏗  BuildType = $BUILD_TYPE"
 echo "   📁 Profile    = $PROFILE_PATH"
-conan install . \
-  --output-folder=build/conan \
+
+rm -rf build
+mkdir build
+cd build
+conan install .. \
+  --output-folder . \
   --profile:host="$PROFILE_PATH" \
   --profile:build="$PROFILE_PATH" \
   --build=missing
