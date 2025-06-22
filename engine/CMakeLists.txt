@@ -53,8 +53,10 @@ add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
 target_link_libraries(${PROJECT_NAME}_test
   PRIVATE
     ${PROJECT_NAME}
-    GTest::gtest
+    gtest::gtest
 )
+
+add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 
 message(STATUS "===============================================")
 message(STATUS "✅ Configuring ${PROJECT_NAME} module... Done.")

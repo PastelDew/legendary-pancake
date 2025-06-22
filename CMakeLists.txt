@@ -93,4 +93,5 @@ message(STATUS "Project[${PROJECT_NAME}] Build Type: ${CMAKE_BUILD_TYPE}, Versio
 find_package(GTest REQUIRED)
 
 # Subdirectories
+enable_testing()
 add_subdirectory(engine)
