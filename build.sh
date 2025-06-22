@@ -46,14 +46,19 @@ fi
 
 case "$CONF" in
   --conf=clang-debug)
+    echo "TEST 1"
     COMPILER_NAME="clang"
+    echo "?????"
     COMPILER_PATH="$(command -v clang)"
     COMPILER_CPP_PATH="$(command -v clang++)"
+    echo "??"
     COMPILER_VERSION=20
     BUILD_TYPE="Debug"
     PROFILE_PATH="./.conan/profiles/clang-debug"
+    echo "TEST 1-1"
     ;;
   --conf=clang-release)
+    echo "TEST 2"
     COMPILER_NAME="clang"
     COMPILER_PATH="$(command -v clang)"
     COMPILER_CPP_PATH="$(command -v clang++)"
@@ -62,6 +67,7 @@ case "$CONF" in
     PROFILE_PATH="./.conan/profiles/clang-release"
     ;;
   --conf=gcc-debug)
+    echo "TEST 3"
     COMPILER_NAME="gcc"
     COMPILER_PATH="$(command -v gcc)"
     COMPILER_CPP_PATH="$(command -v g++)"
@@ -70,6 +76,7 @@ case "$CONF" in
     PROFILE_PATH="./.conan/profiles/gcc-debug"
     ;;
   --conf=gcc-release)
+    echo "TEST 4"
     COMPILER_NAME="gcc"
     COMPILER_PATH="$(command -v gcc)"
     COMPILER_CPP_PATH="$(command -v g++)"
@@ -78,15 +85,18 @@ case "$CONF" in
     PROFILE_PATH="./.conan/profiles/gcc-release"
     ;;
   *)
+    echo "❌ Invalid or unsupported --conf option: $CONF"
     echo "❌ Unknown or missing --conf option(Given: $CONF)"
     echo "   Use one of: --conf=clang-debug, --conf=clang-release, --conf=gcc-debug, --conf=gcc-release"
     exit 1
     ;;
 esac
 if [[ -z "$COMPILER_PATH" || -z "$COMPILER_CPP_PATH}" ]]; then
-  echo "❌ Compiler($COMPILER_PATH or $COMPILER_CPP_PATH) not found in PATH." >&2
+  echo "❌ Compiler($COMPILER_PATH or $COMPILER_CPP_PATH) not found in PATH."
   exit 1
 fi
+
+echo "🛠️  Using compiler: $COMPILER_NAME"
 
 mkdir -p "$FAKEBIN_DIR"
 ln -sf "$COMPILER_PATH" "$FAKEBIN_DIR/cc"

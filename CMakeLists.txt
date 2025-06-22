@@ -25,24 +25,43 @@ endif()
 # Always export compile commands for tooling support
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile commands for tooling" FORCE)
 
-# Include custom modules
-include(GetGitVersion)
-GetGitVersion()
-
 # Include the versioning information
-set(PROJECT_LPE_VERSION_MAJOR ${VERSION_MAJOR} CACHE INTERNAL "Major version information" FORCE)
-set(PROJECT_LPE_VERSION_MINOR ${VERSION_MINOR} CACHE INTERNAL "Minor version information" FORCE)
-set(PROJECT_LPE_VERSION_PATCH ${VERSION_PATCH} CACHE INTERNAL "Patch version information" FORCE)
-set(PROJECT_LPE_VERSION_PRERELEASE ${VERSION_PRERELEASE} CACHE INTERNAL "Pre-release version information" FORCE)
-set(PROJECT_LPE_GIT_COMMIT_HASH ${GIT_COMMIT_HASH} CACHE INTERNAL "Git commit hash" FORCE)
-set(PROJECT_LPE_VERSION
-  "${PROJECT_LPE_VERSION_MAJOR}.${PROJECT_LPE_VERSION_MINOR}.${PROJECT_LPE_VERSION_PATCH}"
-   CACHE INTERNAL "Full version information" FORCE
-)
+include(GetGitRevisionDescription)
+git_describe(GIT_VERSION --tags)
+git_commit_id(PROJECT_LPE_GIT_COMMIT_HASH)
+string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" PROJECT_LPE_VERSION_MAJOR "${GIT_VERSION}")
+string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" PROJECT_LPE_VERSION_MINOR "${GIT_VERSION}")
+string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" PROJECT_LPE_VERSION_PATCH "${GIT_VERSION}")
+string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.[0-9]+-((alpha|beta)+.[0-9]+).*" "\\1" PROJECT_LPE_VERSION_PRERELEASE "${GIT_VERSION}")
+string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+-(alpha|beta)\\.[0-9]+" PROJECT_LPE_VERSION "${GIT_VERSION}")
 set(PROJECT_LPE_FULL_VERSION
   "${PROJECT_LPE_VERSION_MAJOR}.${PROJECT_LPE_VERSION_MINOR}.${PROJECT_LPE_VERSION_PATCH}-${PROJECT_LPE_GIT_COMMIT_HASH}"
    CACHE INTERNAL "Full version information with pre-release and commit hash" FORCE
 )
+
+if(NOT PROJECT_LPE_VERSION) # if not pre-release
+  string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" PROJECT_LPE_VERSION "${GIT_VERSION}")
+endif()
+
+if(NOT PROJECT_LPE_VERSION)
+  set(PROJECT_LPE_VERSION_MAJOR "0")
+  set(PROJECT_LPE_VERSION_MINOR "1")
+  set(PROJECT_LPE_VERSION_PATCH "0")
+  set(PROJECT_LPE_VERSION_PRERELEASE "")
+  set(PROJECT_LPE_VERSION "0.1.0")
+endif()
+
+if("${PROJECT_LPE_VERSION_PRERELEASE}" STREQUAL ${GIT_VERSION})
+  set(PROJECT_LPE_VERSION_PRERELEASE "")
+endif()
+
+set(PROJECT_LPE_FULL_VERSION
+  "${PROJECT_LPE_VERSION_MAJOR}.${PROJECT_LPE_VERSION_MINOR}.${PROJECT_LPE_VERSION_PATCH}-${PROJECT_LPE_GIT_COMMIT_HASH}"
+  CACHE INTERNAL "Full version information with pre-release and commit hash" FORCE
+)
+
+string(TIMESTAMP BUILD_DATE "%Y-%b-%d" UTC)
+string(TIMESTAMP BUILD_DATE_FULL "%Y-%b-%d %H:%M:%S" UTC)
 
 # Allow user to pass LLVM_HINTS via -DLLVM_HINTS=... externally
 if(NOT DEFINED LLVM_HINTS OR LLVM_HINTS STREQUAL "")
@@ -83,6 +102,15 @@ else()
 endif()
 
 project(legendary-pancake VERSION ${PROJECT_LPE_VERSION} LANGUAGES CXX)
+message(STATUS "============================================================")
+message(STATUS "Project Name    : ${PROJECT_NAME}")
+message(STATUS "Project Version : ${PROJECT_LPE_VERSION}")
+message(STATUS "Project Version (Major.Minor.Patch) : ${PROJECT_LPE_VERSION_MAJOR}.${PROJECT_LPE_VERSION_MINOR}.${PROJECT_LPE_VERSION_PATCH}")
+message(STATUS "Project Version (Pre-release) : ${PROJECT_LPE_VERSION_PRERELEASE}")
+message(STATUS "Build Date      : ${BUILD_DATE}")
+message(STATUS "Build Date Full : ${BUILD_DATE_FULL}")
+message(STATUS "Git Commit Hash : ${PROJECT_LPE_GIT_COMMIT_HASH}")
+message(STATUS "============================================================")
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
