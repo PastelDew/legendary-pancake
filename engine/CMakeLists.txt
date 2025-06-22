@@ -53,6 +53,7 @@ add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
 target_link_libraries(${PROJECT_NAME}_test
   PRIVATE
     ${PROJECT_NAME}
+    GTest::gtest
     GTest::gtest_main
 )
 
