@@ -124,6 +124,9 @@ message(STATUS "Project[${PROJECT_NAME}] Build Type: ${CMAKE_BUILD_TYPE}, Versio
 # Find dependencies
 find_package(GTest REQUIRED)
 
+# Conan package manager integration
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/conan")
+
 # Subdirectories
 enable_testing()
 add_subdirectory(engine)
