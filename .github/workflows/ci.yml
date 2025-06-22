@@ -48,6 +48,7 @@ jobs:
           source .venv/bin/activate
           conan profile detect --force
           conan profile show
+          conan install . --output-folder=build/conan --build=missing
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -58,8 +59,7 @@ jobs:
       - name: Build project
         run: |
           source .venv/bin/activate
-          conan install . --output-folder=build --build=missing
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=build/conan/conan_toolchain.cmake
           cmake --build build
 
       - name: Run all test binaries
@@ -92,6 +92,7 @@ jobs:
           source .venv/bin/activate
           conan profile detect --force
           conan profile show
+          conan install . --output-folder=build/conan --build=missing
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -102,8 +103,7 @@ jobs:
       - name: Build project
         run: |
           source .venv/bin/activate
-          conan install . --output-folder=build --build=missing
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=build/conan/conan_toolchain.cmake
           cmake --build build
 
       - name: Run all test binaries
@@ -138,6 +138,7 @@ jobs:
           source .venv/Scripts/activate || source .venv/bin/activate
           conan profile detect --force
           conan profile show
+          conan install . --output-folder=build/conan --build=missing
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -149,8 +150,7 @@ jobs:
         shell: bash
         run: |
           source .venv/Scripts/activate || source .venv/bin/activate
-          conan install . --output-folder=build --build=missing
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=build/conan/conan_toolchain.cmake
           cmake --build build
 
       - name: Run all test binaries

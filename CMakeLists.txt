@@ -7,7 +7,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 # Conan toolchain
-include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
+if(NOT CMAKE_TOOLCHAIN_FILE)
+    if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+        include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+    endif()
+endif()
 
 # Set the build type if not specified
 if(NOT CMAKE_BUILD_TYPE)
