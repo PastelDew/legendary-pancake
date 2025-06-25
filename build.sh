@@ -13,7 +13,7 @@ pip install conan
 FAKEBIN_DIR=".toolchain-fakebin"
 PROFILE_DIR=".conan/profiles"
 PROFILE_PATH="$PROFILE_DIR/default_profile.ini"
-OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/Macos/' | sed 's/linux/Linux/' | sed 's/windows/Windows/')
+OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/Macos/' | sed 's/linux/Linux/')
 if [ -z "$OS_NAME" ]; then
   echo "❌ Unable to determine OS name. Aborting."
   exit 1
@@ -26,11 +26,8 @@ case "$OS_NAME" in
   Linux)
     CPP_LIB="libstdc++"
     ;;
-  Windows)
-    CPP_LIB="msvc"
-    ;;
   *)
-    echo "❌ Unsupported OS: $OS_NAME. Supported: Macos, Linux, Windows."
+    echo "❌ Unsupported OS: $OS_NAME. Supported: Macos, Linux."
     exit 1
     ;;
 esac
