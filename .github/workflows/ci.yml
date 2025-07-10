@@ -120,3 +120,51 @@ jobs:
               "$test_bin"
             fi
           done
+
+  build-windows:
+    name: Windows Build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: ${{ runner.os }}-conan-${{ hashFiles('**/conanfile.*', '**/conan.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          choco install llvm cmake python3 --pre
+          python3 -m venv .venv
+          source .venv/Scripts/activate || source .venv/bin/activate
+          python3 -m pip install --upgrade pip
+          python3 -m pip install conan
+
+      - name: Conan install
+        shell: bash
+        run: |
+          source .venv/Scripts/activate || source .venv/bin/activate
+          conan profile detect --force
+          conan install . --output-folder=build/conan --build=missing
+
+      - name: Build project
+        shell: bash
+        run: |
+          source .venv/Scripts/activate || source .venv/bin/activate
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=build/conan/conan_toolchain.cmake
+          cmake --build build
+
+      - name: Run all test binaries
+        shell: bash
+        run: |
+          set -e
+          for test_bin in ./build/bin/*_test; do
+            if [ -x "$test_bin" ]; then
+              echo "Running $test_bin"
+              "$test_bin"
+            fi
+          done
