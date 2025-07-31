@@ -5,3 +5,7 @@ edition = "2024"
 
 [dependencies]
 bevy = "0.13"
+
+[[bin]]
+name = "dragoon_flight"
+path = "src/main.rs"
