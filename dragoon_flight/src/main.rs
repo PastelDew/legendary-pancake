@@ -1,12 +1,11 @@
 mod game;
-mod modules;
 
 use bevy::prelude::*;
-use game::scenes::main_scene::*;
+use game::scene_manager::plugin::ScenesPlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(MainScene)
+        .add_plugins(ScenesPlugin)
         .run();
 }

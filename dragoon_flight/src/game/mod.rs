@@ -1,1 +1,1 @@
-pub mod scenes;
+pub mod scene_manager;
