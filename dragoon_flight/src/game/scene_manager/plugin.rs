@@ -1,6 +1,10 @@
+use crate::game::entity::anime::FrameCache;
+
 use super::app_extensions::AppSceneExtensions;
 use super::scene_states::SceneStatus;
-use super::scenes::{ingame_scene::InGameScene, main_scene::MainScene, game_over_scene::GameOverScene};
+use super::scenes::{
+    game_over_scene::GameOverScene, ingame_scene::InGameScene, main_scene::MainScene,
+};
 use super::score::Score;
 use bevy::prelude::*;
 
@@ -13,6 +17,6 @@ impl Plugin for ScenesPlugin {
             .add_scene(InGameScene {})
             .add_scene(GameOverScene);
 
-        app.init_resource::<Score>();
+        app.init_resource::<Score>().init_resource::<FrameCache>();
     }
 }
