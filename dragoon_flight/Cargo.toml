@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = "0.13"
+bevy = "0.15.1"
+bevy_svg = "0.15.1"
+
 
 [[bin]]
 name = "dragoon_flight"
 path = "src/main.rs"
+
