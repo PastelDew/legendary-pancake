@@ -6,3 +6,4 @@ mod app_extensions;
 mod scene_states;
 mod scene_traits;
 mod scenes;
+pub mod score;

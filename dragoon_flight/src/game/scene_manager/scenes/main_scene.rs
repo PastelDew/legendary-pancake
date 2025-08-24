@@ -40,60 +40,67 @@ impl IScene for MainScene {
 
 // --- Systems ---
 fn setup_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
+    // 2D 카메라
+    commands.spawn(Camera2d);
 
-    let button_style = bevy::ui::Style {
+    // 버튼 레이아웃(Node) 공통 스타일
+    let button_node = Node {
         width: Val::Px(250.0),
         height: Val::Px(65.0),
         margin: UiRect::all(Val::Px(20.0)),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
-        ..default()
-    };
-    let button_text_style = bevy::text::TextStyle {
-        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-        font_size: 40.0,
-        color: Color::srgb(0.9, 0.9, 0.9),
+        ..Default::default()
     };
 
+    // 텍스트 공통 스타일 (프로젝트 폰트 사용)
+    let text_color = TextColor(Color::srgb(0.9, 0.9, 0.9));
+    let _font_regular: Handle<Font> = asset_server.load("fonts/NanumGothic.ttf");
+    let font_bold: Handle<Font> = asset_server.load("fonts/NanumGothicBold.ttf");
+
+    // 루트 컨테이너
     commands
         .spawn((
-            NodeBundle::default(),
             OnMainMenuScreen,
-            bevy::ui::Style {
+            Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 flex_direction: FlexDirection::Column,
-                ..default()
+                ..Default::default()
             },
         ))
         .with_children(|parent| {
+            // Start Game 버튼
             parent
                 .spawn((
-                    ButtonBundle::default(),
+                    Button,
                     StartGameButton,
-                    button_style.clone(),
+                    button_node.clone(),
                     BackgroundColor(NORMAL_BUTTON),
                 ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Start Game",
-                        button_text_style.clone(),
+                    parent.spawn((
+                        Text::new("Start Game"),
+                        TextFont { font: font_bold.clone(), font_size: 40.0, ..Default::default() },
+                        text_color,
                     ));
                 });
+
+            // Exit 버튼
             parent
                 .spawn((
-                    ButtonBundle::default(),
+                    Button,
                     ExitButton,
-                    button_style,
+                    button_node,
                     BackgroundColor(NORMAL_BUTTON),
                 ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Exit",
-                        button_text_style,
+                    parent.spawn((
+                        Text::new("Exit"),
+                        TextFont { font: font_bold, font_size: 40.0, ..Default::default() },
+                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
                     ));
                 });
         });

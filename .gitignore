@@ -44,3 +44,5 @@ build
 compile_commands.json
 
 dragoon_flight/target
+
+.DS_Store

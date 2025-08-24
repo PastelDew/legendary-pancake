@@ -5,4 +5,5 @@ pub enum SceneStatus {
     #[default]
     Main,
     InGame,
+    GameOver,
 }
