@@ -114,7 +114,7 @@ fn on_start(
         Vec3::new(1.0, 1.0, 1.0),
     );
     commands.entity(player_entity).insert(Player {
-        fire_timer: Timer::from_seconds(0.5, TimerMode::Repeating),
+        fire_timer: Timer::from_seconds(0.125, TimerMode::Repeating),
     });
 
     let enemy_frames = load_frames(
@@ -221,7 +221,7 @@ fn bullet_update_system(
     time: Res<Time>,
     mut commands: Commands,
     windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
-    mut q: Query<(Entity, &mut Transform, &Velocity2D, &mut Bullet), With<Bullet>>,
+    mut q: Query<(Entity, &mut Transform, &Velocity2D, &mut Bullet), (With<Bullet>, Without<DyingFade>)>,
 ) {
     let window = windows.single();
     let half_w = window.width() / 2.0;
