@@ -17,7 +17,7 @@ impl IScene for GameOverScene {
 struct OnGameOverScreen;
 
 fn setup_game_over(mut commands: Commands) {
-    commands.spawn(Camera2d);
+    commands.spawn((Camera2d, OnGameOverScreen));
 
     commands
         .spawn((

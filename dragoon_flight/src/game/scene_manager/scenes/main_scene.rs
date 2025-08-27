@@ -41,7 +41,7 @@ impl IScene for MainScene {
 // --- Systems ---
 fn setup_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     // 2D 카메라
-    commands.spawn(Camera2d);
+    commands.spawn((Camera2d, OnMainMenuScreen));
 
     // 버튼 레이아웃(Node) 공통 스타일
     let button_node = Node {

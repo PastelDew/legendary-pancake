@@ -2,10 +2,13 @@ use super::super::scene_states::SceneStatus;
 use super::super::scene_traits::*;
 use crate::game::entity::{
     anime::{self, *},
-    entity_properties::Velocity2D,
+    entity_properties::{self, AutoSizeCollider, Collider, CollisionCheck, Velocity2D},
     spawner::*,
 };
 use bevy::{ecs::schedule::*, prelude::Or, prelude::*};
+
+#[derive(Component)]
+struct OnInGameScreen;
 
 #[derive(Component)]
 struct Health {
@@ -70,7 +73,9 @@ impl IScene for InGameScene {
             enemy_fadeout_system,
             player_enemy_collision_system,
             health_bar_update_system,
+            // 애니메이션 프레임 갱신 후 콜라이더 자동 설정 적용
             anime::animate_sprite,
+            entity_properties::auto_size_colliders_system,
         )
             .into_configs()
     }
@@ -80,13 +85,14 @@ impl IScene for InGameScene {
     }
 }
 
-// 게임 엔티티들을 생성하는 시스템
 fn on_start(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
     mut frame_cache: ResMut<FrameCache>,
 ) {
+    // 인게임 카메라 생성
+    commands.spawn((Camera2d, OnInGameScreen));
     // 창 크기 계산 및 플레이어 X 앵커
     let window = windows.single();
     let half_w = window.width() / 2.0;
@@ -113,9 +119,18 @@ fn on_start(
         Vec3::new(player_x, 0.0, 0.0),
         Vec3::new(1.0, 1.0, 1.0),
     );
-    commands.entity(player_entity).insert(Player {
-        fire_timer: Timer::from_seconds(0.125, TimerMode::Repeating),
-    });
+    commands.entity(player_entity)
+        .insert((
+            Player {
+                fire_timer: Timer::from_seconds(0.125, TimerMode::Repeating),
+            },
+            Collider {
+                offset: Vec3::ZERO,
+                scale: Vec3::ONE,
+            },
+            AutoSizeCollider { multiplier: Vec2::new(0.5, 0.5), padding: Vec2::ZERO },
+            Health { current: 3, max: 3 },
+        ));
 
     let enemy_frames = load_frames(
         &asset_server,
@@ -212,6 +227,7 @@ fn player_auto_fire_system(
                 .insert(Bullet {
                     life: Timer::from_seconds(2.0, TimerMode::Once),
                 });
+            info!("Bullet fired at x={:.1}, y={:.1}", tf.translation.x, tf.translation.y);
         }
     }
 }
@@ -248,14 +264,14 @@ fn bullet_update_system(
 fn on_update() {}
 fn on_exit(
     mut commands: Commands,
-    mut q: Query<Entity, Or<(With<Bullet>, With<Player>, With<Enemy>, With<DyingFade>)>>,
+    mut q: Query<Entity, Or<(With<Bullet>, With<Player>, With<Enemy>, With<DyingFade>, With<OnInGameScreen>)>>,
 ) {
     for e in &mut q {
         commands.entity(e).despawn_recursive();
     }
 }
 
-// 적 이동 및 화면 밖에서 오른쪽으로 워프
+// 적 이동
 fn enemy_update_system(
     time: Res<Time>,
     windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
@@ -275,30 +291,38 @@ fn enemy_update_system(
 // 플레이어-적 충돌 처리: 플레이어 체력 감소 및 사망 처리
 fn player_enemy_collision_system(
     mut commands: Commands,
-    mut next_state: ResMut<NextState<super::super::scene_states::SceneStatus>>,
-    mut players: Query<(Entity, &Transform, &mut Health), Without<DyingFade>>,
-    enemies: Query<(Entity, &Transform), With<Enemy>>,
+    mut players: Query<(Entity, &Transform, &Collider, &mut Health), (With<Player>, Without<DyingFade>)>,
+    enemies: Query<(Entity, &Transform, &Collider), (With<Enemy>, Without<DyingFade>)>,
 ) {
-    if let Ok((p_ent, p_tf, mut hp)) = players.get_single_mut() {
-        let p_pos = p_tf.translation.truncate();
-        let player_r = 28.0f32;
-        let enemy_r = 28.0f32;
-        for (e_ent, e_tf) in &enemies {
-            let e_pos = e_tf.translation.truncate();
-            if p_pos.distance_squared(e_pos) <= (player_r + enemy_r).powi(2) {
+    if let Ok((p_ent, p_tf, p_col, mut hp)) = players.get_single_mut() {
+        for (e_ent, e_tf, e_col) in &enemies {
+            let p_collider = (p_tf, p_col);
+            let e_collider = (e_tf, e_col);
+            if p_collider.check_collision(&e_collider) {
+                let before = hp.current;
+                info!(
+                    "Player-Enemy HIT: hp {} -> {} (pending)",
+                    before,
+                    before.saturating_sub(1)
+                );
+                // 적과 충돌 시 적 제거 (이미 제거되었을 수 있으므로 존재 확인)
+                if let Some(mut ecmd) = commands.get_entity(e_ent) {
+                    ecmd.despawn_recursive();
+                }
+                
                 if hp.current > 0 {
                     hp.current -= 1;
                 }
-                // 충돌한 적은 제거하여 연속 타격 방지
-                commands.entity(e_ent).despawn_recursive();
+                
+                // 체력이 0이 되면 페이드아웃 시작
                 if hp.current == 0 {
-                    // 플레이어 페이드아웃 시작
-                    commands.entity(p_ent).insert(DyingFade {
-                        timer: Timer::from_seconds(0.6, TimerMode::Once),
-                    });
-                    // 게임오버 전환은 페이드 시스템에서 처리
+                    if let Some(mut pcmd) = commands.get_entity(p_ent) {
+                        pcmd.insert(DyingFade {
+                            timer: Timer::from_seconds(0.4, TimerMode::Once),
+                        });
+                        info!("Player dying fade started");
+                    }
                 }
-                break;
             }
         }
     }
@@ -358,11 +382,20 @@ fn enemy_spawn_system(
         );
         commands
             .entity(enemy_entity)
-            .insert(Velocity2D {
-                x: spawner.speed,
-                y,
-            })
-            .insert((Enemy {}, Health { current: 5, max: 5 }));
+            .insert((
+                Velocity2D {
+                    x: spawner.speed,
+                    y,
+                },
+                Enemy {}, 
+                Health { current: 5, max: 5 },
+                Collider {
+                    offset: Vec3::ZERO,
+                    scale: Vec3::ONE,
+                },
+                AutoSizeCollider { multiplier: Vec2::new(0.80, 0.80), padding: Vec2::ZERO },
+            ));
+        info!("Enemy spawned at y={:.1}", y);
     }
 }
 
@@ -378,11 +411,12 @@ fn enemy_despawn_offscreen_system(
     for (e, tf) in &q {
         if tf.translation.x < -half_w - margin {
             commands.entity(e).despawn_recursive();
+            info!("Enemy despawned offscreen");
         }
     }
 }
 
-// 총알-적 충돌 처리: 적은 5히트 시 페이드아웃 후 디스폰
+// 총알-적 충돌 처리
 fn bullet_enemy_hit_system(
     mut commands: Commands,
     mut bullets: Query<(Entity, &Transform), With<Bullet>>,
@@ -401,21 +435,24 @@ fn bullet_enemy_hit_system(
             let e_pos = e_tf.translation.truncate();
             let dist2 = b_pos.distance_squared(e_pos);
             if dist2 <= (bullet_r + enemy_r) * (bullet_r + enemy_r) {
-                // 명중: 총알 제거
-                commands.entity(b_ent).despawn_recursive();
-                // 체력 감소
+                if let Some(mut bcmd) = commands.get_entity(b_ent) {
+                    bcmd.despawn_recursive();
+                }
                 if let Some(mut health) = health_opt {
-                    if health.current > 0 {
-                        health.current -= 1;
-                    }
+                    let before = health.current;
+                    if health.current > 0 { health.current -= 1; }
+                    info!("Bullet-Enemy HIT: hp {} -> {}", before, health.current);
                     if health.current == 0 {
                         // 페이드아웃 시작
-                        commands.entity(e_ent).insert(DyingFade {
-                            timer: Timer::from_seconds(0.4, TimerMode::Once),
-                        });
+                        if let Some(mut ecmd) = commands.get_entity(e_ent) {
+                            ecmd.insert(DyingFade { timer: Timer::from_seconds(0.4, TimerMode::Once) });
+                            info!("Enemy dying fade started");
+                        } else {
+                            info!("Skip fade: enemy already despawned");
+                        }
                     }
                 }
-                break; // 한 총알은 하나만 타격
+                break;
             }
         }
     }
@@ -437,7 +474,10 @@ fn enemy_fadeout_system(
         if fading.timer.finished() {
             commands.entity(e).despawn_recursive();
             if is_player.is_some() {
+                info!("Player despawned -> GameOver");
                 next_state.set(super::super::scene_states::SceneStatus::GameOver);
+            } else {
+                info!("Enemy despawned after fade");
             }
         }
     }
